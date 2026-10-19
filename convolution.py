@@ -1,7 +1,7 @@
 from PIL import Image, ImageOps
 import numpy as np
 
-from filters_config import FILTER_CONFIG
+from processors import FILTER_CONFIG
 
 def optimized_convolution(image: Image.Image, kernel: np.ndarray) -> Image.Image:
     img_array = np.array(image, dtype=np.float32)
