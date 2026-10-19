@@ -13,7 +13,7 @@ FILTER_CONFIG = {
         },
         "previews": ["Original", "Filtered"]
     },
-    "Gaussian (Basic)": {
+    "Separable Gaussian": {
         "type": "basic",
         "processor": "run_gaussian_separable",
         "params": {
