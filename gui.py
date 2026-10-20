@@ -4,7 +4,7 @@
 import tkinter as tk
 from tkinter import filedialog, ttk
 from PIL import Image, ImageTk
-from convolution import apply_filter
+from processors import apply_filter
 from filters_config import FILTER_CONFIG
 
 class ImageFilterApp:
@@ -146,7 +146,7 @@ class ImageFilterApp:
 
         params = {name: var.get() for name, var in self.param_vars.items()}
         
-        self.filtered_image = apply_filter(
+        self.results_dict = apply_filter(
             self.original_image, 
             selected_filter, 
             params=params,
@@ -158,9 +158,8 @@ class ImageFilterApp:
                 self.display_image(img, self.preview_canvases[title])
 
     def save_image(self):
-        if self.filtered_image is None:
+        if not hasattr(self, 'results_dict') or not self.results_dict:
             return
-
         final_img = list(self.results_dict.values())[-1]
         
         file_path = filedialog.asksaveasfilename(

@@ -2,6 +2,7 @@ import numpy as np
 from PIL import Image
 
 from convolution import optimized_convolution, basic_convolution
+from filters_config import FILTER_CONFIG
 
 # ==========================================
 #  LEAVING KERNEL GENERATION AS PREVIOUSLY IMPLEMENTED (ONLY MODIFIED TO USE SEPARABLE GAUSSIAN)
@@ -97,31 +98,71 @@ def run_laplacian(image: Image.Image, laplacian_size: int = 3, optimized: bool =
 # ==========================================   
 
 def run_unsharp_mask(image: Image.Image, sigma: float = 1.0, alpha: float = 1.0, optimized: bool = True) -> Image.Image:
-    Gaussian_blurred = run_gaussian_separable(image, sigma=sigma, optimized=optimized)
-    mask = np.array(image) - np.array(Gaussian_blurred)
-    unsharp_image = np.array(image) + alpha * mask
+    image_array = np.array(image)
+
+    gaussian_blurred = run_gaussian_separable(image, sigma=sigma, optimized=optimized)
+    gaussian_blurred_array = np.array(gaussian_blurred)
+
+    mask_array = image_array - gaussian_blurred_array
+
+    unsharp_image = image_array + alpha * mask_array
     unsharp_image = np.clip(unsharp_image, 0, 255).astype(np.uint8)
-    return Image.fromarray(unsharp_image)
+    
+    return {
+        "Original (I)": image,
+        "Gaussian (Gσ)": gaussian_blurred,
+        "Mask (I − Gσ)": Image.fromarray(mask_array),
+        "Unsharp (U)": Image.fromarray(unsharp_image)
+    }
 
 def run_high_boost(image: Image.Image, sigma: float = 1.0, a_param: float = 1.2, optimized: bool = True) -> Image.Image:
-    Gaussian_blurred = run_gaussian_separable(image, sigma=sigma, optimized=optimized)
-    high_boost_image = np.array(image) * a_param - np.array(Gaussian_blurred)
+    image_array = np.array(image)
+
+    gaussian_blurred = run_gaussian_separable(image, sigma=sigma, optimized=optimized)
+    gaussian_blurred_array = np.array(gaussian_blurred)
+    
+    high_boost_image = (image_array * a_param) - gaussian_blurred_array
     high_boost_image = np.clip(high_boost_image, 0, 255).astype(np.uint8)
-    return Image.fromarray(high_boost_image)
+    
+    return {
+        "Original (I)": image,
+        "Gaussian (Gσ)": gaussian_blurred,
+        "High-Boost (H)": Image.fromarray(high_boost_image)
+    }
 
 def run_dog(image: Image.Image, sigma1: float = 1.0, sigma2: float = 2.0, optimized: bool = True) -> Image.Image:
-    Gaussian_blurred1 = run_gaussian_separable(image, sigma=sigma1, optimized=optimized)
-    Gaussian_blurred2 = run_gaussian_separable(image, sigma=sigma2, optimized=optimized)
-    dog_image = np.array(Gaussian_blurred1) - np.array(Gaussian_blurred2)
+    image_array = np.array(image)
+    
+    gaussian_blurred1 = run_gaussian_separable(image, sigma=sigma1, optimized=optimized)
+    gaussian_blurred2 = run_gaussian_separable(image, sigma=sigma2, optimized=optimized)
+    gaussian_blurred1_array = np.array(gaussian_blurred1)
+    gaussian_blurred2_array = np.array(gaussian_blurred2)
+    
+    dog_image = gaussian_blurred1_array - gaussian_blurred2_array
     dog_image = np.clip(dog_image, 0, 255).astype(np.uint8)
-    return Image.fromarray(dog_image)
+
+    return {
+        "Original (I)": image,
+        "Gaussian (Gσ1)": gaussian_blurred1,
+        "Gaussian (Gσ2)": gaussian_blurred2,
+        "DoG (D)": Image.fromarray(dog_image)
+    }
 
 def run_log(image: Image.Image, sigma: float = 1.0, laplacian_size: int = 3, optimized: bool = True) -> Image.Image:
-    Gaussian_blurred = run_gaussian_separable(image, sigma=sigma, optimized=optimized)
-    laplacian_image = run_laplacian(Gaussian_blurred, laplacian_size=laplacian_size, optimized=optimized)
+    image_array = np.array(image)
+
+    gaussian_blurred = run_gaussian_separable(image, sigma=sigma, optimized=optimized)
+
+    laplacian_image = run_laplacian(gaussian_blurred, laplacian_size=laplacian_size, optimized=optimized)
+    
     log_image = np.array(laplacian_image)
     log_image = np.clip(log_image, 0, 255).astype(np.uint8)
-    return Image.fromarray(log_image)
+    
+    return {
+        "Original (I)": image,
+        "Gaussian (Gσ)": gaussian_blurred,
+        "LoG (LoG)": Image.fromarray(log_image)
+    }
 
 # ==========================================
 # REGISTRY OF PROCESSORS
@@ -137,3 +178,30 @@ PROCESSOR_REGISTRY = {
     "run_dog": run_dog,
     "run_log": run_log,
 }
+
+# ==========================================
+# HELPER FUNCTION TO APPLY FILTERS BASED ON CONFIGURATION
+# ==========================================
+
+def apply_filter(image: Image.Image, filter_name: str, params: dict, optimized: bool = True) -> Image.Image:
+    if filter_name not in FILTER_CONFIG:
+        raise ValueError(f"Filter '{filter_name}' is not defined in FILTER_CONFIG.")
+
+    filter_config = FILTER_CONFIG[filter_name]
+    filter_type = filter_config["type"]
+    filter_processor_key = filter_config["processor"]
+
+    if filter_processor_key not in PROCESSOR_REGISTRY:
+        raise ValueError(f"Processor '{filter_processor_key}' for filter '{filter_name}' is not registered.")
+
+    processor_function = PROCESSOR_REGISTRY[filter_processor_key]
+
+
+    if filter_type == "basic":
+        result_image = processor_function(image, **params, optimized=optimized)
+        return {
+            filter_config["previews"][0]: image,
+            filter_config["previews"][1]: result_image
+        }
+    elif filter_type == "combination":
+        return processor_function(image, **params, optimized=optimized)

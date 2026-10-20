@@ -1,7 +1,5 @@
-from PIL import Image, ImageOps
+from PIL import Image
 import numpy as np
-
-from processors import FILTER_CONFIG
 
 def optimized_convolution(image: Image.Image, kernel: np.ndarray) -> Image.Image:
     img_array = np.array(image, dtype=np.float32)
@@ -58,24 +56,3 @@ def basic_convolution(image: Image.Image, kernel: np.ndarray) -> Image.Image:
 
     output_img_array = np.clip(output_img_array, 0, 255).astype(np.uint8)
     return Image.fromarray(output_img_array)
-
-#to be redone
-def apply_filter(image: Image.Image, filter_name: str, optimized: bool = True) -> Image.Image:
-    if filter_name in FILTER_CONFIG:
-        kernel_function = FILTER_CONFIG[filter_name]
-
-        if filter_name == "Gaussian":
-            kernel = kernel_function(sigma=sigma, size=kernel_size)
-        elif filter_name == "Sharpening":
-            kernel = kernel_function(strength=strength)
-        elif filter_name == "Averaging":
-            kernel = kernel_function(size=kernel_size)
-        else:
-            kernel = kernel_function()
-
-        if optimized:
-            return optimized_convolution(image, kernel)
-        else:
-            return basic_convolution(image, kernel)
-    else:
-        raise ValueError(f"Filter '{filter_name}' is not defined in FILTER_CONFIG.")
