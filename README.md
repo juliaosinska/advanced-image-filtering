@@ -76,6 +76,7 @@ This project lets you upload an image, choose a filter, adjust its parameters, p
 - `processors.py` — filter implementations and processor registry
 - `convolution.py` — low-level convolution operations
 - `filters_config.py` — filter definitions and parameter metadata
+- `test_images/` — sample images that can be used to test and compare filter behavior
 
 ## Requirements
 
