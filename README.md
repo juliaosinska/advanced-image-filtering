@@ -48,21 +48,27 @@ This project lets you upload an image, choose a filter, adjust its parameters, p
 - Purpose: highlights rapid intensity changes and detects edges in the image.
 - Effect of parameters: the `Laplacian Size` changes the kernel size used for edge detection. Larger kernels detect broader transitions and produce heavier, thicker edge responses.
 
+#### Note: you can see the examples for those basic filters in the related repo: [image-filtering](https://github.com/juliaosinska/image-filtering)
+
 ### Unsharp Mask (USM)
 - Purpose: creates a sharper image by emphasizing the difference between the original image and its blurred version.
 - Effect of parameters: `Sigma` defines the blur used to create the mask; larger sigma gives a smoother base image and a broader sharpening effect. `Alpha` controls the strength of the enhancement; higher values make edges more pronounced but can over-sharpen the image.
+<img width="1196" height="878" alt="image" src="https://github.com/user-attachments/assets/eee6b357-728a-4733-8b28-906d01a12af4" />
 
 ### High-Boost Filter
 - Purpose: enhances fine details more strongly than a standard unsharp mask while preserving contrast in the image.
 - Effect of parameters: `Sigma` controls the amount of initial blur, while `A (Boost Factor)` controls the enhancement strength. Larger values increase detail contrast and edge emphasis, but too high a value can make the image look exaggerated or unnatural.
+<img width="1197" height="878" alt="image" src="https://github.com/user-attachments/assets/31f672b5-78a5-4494-b58e-88ccba51f0c1" />
 
 ### Difference of Gaussians (DoG)
 - Purpose: detects edges and features by subtracting one blurred version of the image from another with a different blur scale.
 - Effect of parameters: `Sigma 1` and `Sigma 2` control the two Gaussian blurs. Increasing either sigma emphasizes larger image structures, while the difference between the values determines which details stand out most.
+<img width="1194" height="877" alt="image" src="https://github.com/user-attachments/assets/e720679c-404b-451e-9fbc-72ce812251f2" />
 
 ### Laplacian of Gaussian (LoG)
 - Purpose: combines Gaussian smoothing and Laplacian edge detection to detect edges and blob-like structures.
 - Effect of parameters: `Sigma` sets the smoothing scale; larger values suppress fine details and emphasize larger structures. `Laplacian Size` changes the sensitivity and thickness of the detected edges.
+<img width="1194" height="876" alt="image" src="https://github.com/user-attachments/assets/9ccc4b5d-0fe2-4d52-8915-6e021e937d2d" />
 
 ## Project structure
 
