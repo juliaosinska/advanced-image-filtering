@@ -59,7 +59,8 @@ def basic_convolution(image: Image.Image, kernel: np.ndarray) -> Image.Image:
     output_img_array = np.clip(output_img_array, 0, 255).astype(np.uint8)
     return Image.fromarray(output_img_array)
 
-def apply_filter(image: Image.Image, filter_name: str, optimized: bool = True, sigma: float = 1.0, strength: float = 1.0, kernel_size: int = 3) -> Image.Image:
+#to be redone
+def apply_filter(image: Image.Image, filter_name: str, optimized: bool = True) -> Image.Image:
     if filter_name in FILTER_CONFIG:
         kernel_function = FILTER_CONFIG[filter_name]
 

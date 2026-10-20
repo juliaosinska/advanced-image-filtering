@@ -48,26 +48,28 @@ def get_laplacian_kernel(size=3):
         return kernel
 
 # ==========================================
-#  BASIC FILTER PROCESSORS
-# ==========================================
+# BASIC FILTERS PROCESSORS
+# ==========================================   
 
 def run_averaging(image: Image.Image, kernel_size: int = 3, optimized: bool = True) -> Image.Image:
     kernel = get_averaging_kernel(size=kernel_size)
-    if optimized:
-        return optimized_convolution(image, kernel)
+    if optimized: 
+        final_image = optimized_convolution(image, kernel)
     else:
-        return basic_convolution(image, kernel)
+        final_image = basic_convolution(image, kernel)
+
+    return final_image
 
 def run_gaussian_separable(image: Image.Image, sigma: float = 1.0, optimized: bool = True) -> Image.Image:
     kernel = get_separable_gaussian_kernel(sigma=sigma)
     size = len(kernel)
 
-    kenrel_h = kernel.reshape((1, size))
+    kernel_h = kernel.reshape((1, size))
     kernel_v = kernel.reshape((size, 1))
 
     convolution_version = optimized_convolution if optimized else basic_convolution
 
-    h_convolved_image = convolution_version(image, kenrel_h)
+    h_convolved_image = convolution_version(image, kernel_h)
     final_image = convolution_version(h_convolved_image, kernel_v)
 
     return final_image
@@ -75,18 +77,55 @@ def run_gaussian_separable(image: Image.Image, sigma: float = 1.0, optimized: bo
 def run_sharpening(image: Image.Image, strength: float = 1.0, optimized: bool = True) -> Image.Image:
     kernel = get_sharpening_kernel(strength=strength)
     if optimized:
-        return optimized_convolution(image, kernel)
+        final_image = optimized_convolution(image, kernel)
     else:
-        return basic_convolution(image, kernel)
+        final_image = basic_convolution(image, kernel)
+
+    return final_image
 
 def run_laplacian(image: Image.Image, laplacian_size: int = 3, optimized: bool = True) -> Image.Image:
     kernel = get_laplacian_kernel(size=laplacian_size)
     if optimized:
-        return optimized_convolution(image, kernel)
+        final_image = optimized_convolution(image, kernel)
     else:
-        return basic_convolution(image, kernel)
+        final_image = basic_convolution(image, kernel)
+    
+    return final_image
 
+# ==========================================
+# ADVANCED FILTERS PROCESSORS
+# ==========================================   
 
+def run_unsharp_mask(image: Image.Image, sigma: float = 1.0, alpha: float = 1.0, optimized: bool = True) -> Image.Image:
+    Gaussian_blurred = run_gaussian_separable(image, sigma=sigma, optimized=optimized)
+    mask = np.array(image) - np.array(Gaussian_blurred)
+    unsharp_image = np.array(image) + alpha * mask
+    unsharp_image = np.clip(unsharp_image, 0, 255).astype(np.uint8)
+    return Image.fromarray(unsharp_image)
+
+def run_high_boost(image: Image.Image, sigma: float = 1.0, a_param: float = 1.2, optimized: bool = True) -> Image.Image:
+    Gaussian_blurred = run_gaussian_separable(image, sigma=sigma, optimized=optimized)
+    high_boost_image = np.array(image) * a_param - np.array(Gaussian_blurred)
+    high_boost_image = np.clip(high_boost_image, 0, 255).astype(np.uint8)
+    return Image.fromarray(high_boost_image)
+
+def run_dog(image: Image.Image, sigma1: float = 1.0, sigma2: float = 2.0, optimized: bool = True) -> Image.Image:
+    Gaussian_blurred1 = run_gaussian_separable(image, sigma=sigma1, optimized=optimized)
+    Gaussian_blurred2 = run_gaussian_separable(image, sigma=sigma2, optimized=optimized)
+    dog_image = np.array(Gaussian_blurred1) - np.array(Gaussian_blurred2)
+    dog_image = np.clip(dog_image, 0, 255).astype(np.uint8)
+    return Image.fromarray(dog_image)
+
+def run_log(image: Image.Image, sigma: float = 1.0, laplacian_size: int = 3, optimized: bool = True) -> Image.Image:
+    Gaussian_blurred = run_gaussian_separable(image, sigma=sigma, optimized=optimized)
+    laplacian_image = run_laplacian(Gaussian_blurred, laplacian_size=laplacian_size, optimized=optimized)
+    log_image = np.array(laplacian_image)
+    log_image = np.clip(log_image, 0, 255).astype(np.uint8)
+    return Image.fromarray(log_image)
+
+# ==========================================
+# REGISTRY OF PROCESSORS
+# ==========================================
 
 PROCESSOR_REGISTRY = {
     "run_averaging": run_averaging,
