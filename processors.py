@@ -105,14 +105,14 @@ def run_unsharp_mask(image: Image.Image, sigma: float = 1.0, alpha: float = 1.0,
 
     mask_array = image_array - gaussian_blurred_array
 
-    unsharp_image = image_array + alpha * mask_array
-    unsharp_image = np.clip(unsharp_image, 0, 255).astype(np.uint8)
+    unsharp_array = image_array + alpha * mask_array
+    unsharp_array = np.clip(unsharp_array, 0, 255).astype(np.uint8)
     
     return {
         "Original (I)": image,
         "Gaussian (Gσ)": gaussian_blurred,
         "Mask (I − Gσ)": Image.fromarray(mask_array),
-        "Unsharp (U)": Image.fromarray(unsharp_image)
+        "Unsharp (U)": Image.fromarray(unsharp_array)
     }
 
 def run_high_boost(image: Image.Image, sigma: float = 1.0, a_param: float = 1.2, optimized: bool = True) -> Image.Image:
@@ -120,48 +120,49 @@ def run_high_boost(image: Image.Image, sigma: float = 1.0, a_param: float = 1.2,
 
     gaussian_blurred = run_gaussian_separable(image, sigma=sigma, optimized=optimized)
     gaussian_blurred_array = np.array(gaussian_blurred)
-    
-    high_boost_image = (image_array * a_param) - gaussian_blurred_array
-    high_boost_image = np.clip(high_boost_image, 0, 255).astype(np.uint8)
+
+    mask_array = image_array - gaussian_blurred_array
+
+    # GenAI: Gemini helped with adjusting the high-boost formula to ensure avoiding dark images
+    # A * I - Gσ = I + (A - 1) * I - Gσ = I + (A - 1) * (I - Gσ)
+    high_boost_array = image_array + (a_param - 1.0) * mask_array
+    high_boost_array = np.clip(high_boost_array, 0, 255).astype(np.uint8)
     
     return {
         "Original (I)": image,
         "Gaussian (Gσ)": gaussian_blurred,
-        "High-Boost (H)": Image.fromarray(high_boost_image)
+        "High-Boost (H)": Image.fromarray(high_boost_array)
     }
 
 def run_dog(image: Image.Image, sigma1: float = 1.0, sigma2: float = 2.0, optimized: bool = True) -> Image.Image:
-    image_array = np.array(image)
-    
     gaussian_blurred1 = run_gaussian_separable(image, sigma=sigma1, optimized=optimized)
     gaussian_blurred2 = run_gaussian_separable(image, sigma=sigma2, optimized=optimized)
+
     gaussian_blurred1_array = np.array(gaussian_blurred1)
     gaussian_blurred2_array = np.array(gaussian_blurred2)
     
-    dog_image = gaussian_blurred1_array - gaussian_blurred2_array
-    dog_image = np.clip(dog_image, 0, 255).astype(np.uint8)
+    dog_array = gaussian_blurred1_array - gaussian_blurred2_array
+    dog_array = np.clip(dog_array, 0, 255).astype(np.uint8)
 
     return {
         "Original (I)": image,
-        "Gaussian (Gσ1)": gaussian_blurred1,
-        "Gaussian (Gσ2)": gaussian_blurred2,
-        "DoG (D)": Image.fromarray(dog_image)
+        "Gaussian 1 (σ₁)": gaussian_blurred1,
+        "Gaussian 2 (σ₂)": gaussian_blurred2,
+        "DoG (D)": Image.fromarray(dog_array)
     }
 
 def run_log(image: Image.Image, sigma: float = 1.0, laplacian_size: int = 3, optimized: bool = True) -> Image.Image:
-    image_array = np.array(image)
-
     gaussian_blurred = run_gaussian_separable(image, sigma=sigma, optimized=optimized)
 
     laplacian_image = run_laplacian(gaussian_blurred, laplacian_size=laplacian_size, optimized=optimized)
     
-    log_image = np.array(laplacian_image)
-    log_image = np.clip(log_image, 0, 255).astype(np.uint8)
+    log_array = np.array(laplacian_image)
+    log_array = np.clip(log_array + 128, 0, 255).astype(np.uint8)
     
     return {
         "Original (I)": image,
         "Gaussian (Gσ)": gaussian_blurred,
-        "LoG (LoG)": Image.fromarray(log_image)
+        "LoG Result": Image.fromarray(log_array)
     }
 
 # ==========================================

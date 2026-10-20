@@ -65,6 +65,20 @@ class ImageFilterApp:
         # --- 4. Initialize UI for the current filter ---
         self.rebuild_ui_for_current_filter()
 
+        # --- 5. Status Bar for image clipping ---
+        self.status_var = tk.StringVar(value="Ready. Choose a filter and click 'Apply Filter'.")
+        status_bar = tk.Label(
+            root, 
+            textvariable=self.status_var, 
+            bd=1, 
+            relief=tk.SUNKEN, 
+            anchor=tk.W, 
+            font=("Arial", 9),
+            padx=5,
+            pady=3
+        )
+        status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+
     def on_filter_changed(self, event=None):
         self.rebuild_ui_for_current_filter()
         self.reset_filter_output()
@@ -156,6 +170,18 @@ class ImageFilterApp:
         for title, img in self.results_dict.items():
             if title in self.preview_canvases:
                 self.display_image(img, self.preview_canvases[title])
+
+        # inform the user about the clipping method used for the selected filter
+        if "Unsharp" in selected_filter:
+            self.status_var.set("Method for USM: Final result and mask have been clipped to the range [0, 255].")
+        elif "High-Boost" in selected_filter:
+            self.status_var.set("Method for High-Boost: Pixel values scaled using the enhancement formula and clipped to [0, 255].")
+        elif "Difference" in selected_filter:
+            self.status_var.set("Method for DoG: Difference of Gaussians clipped to the range [0, 255].")
+        elif "Laplacian" in selected_filter:
+            self.status_var.set("Method for LoG: Laplacian of Gaussian response shifted by +128 and clipped to [0, 255] for visualization.")
+        else:
+            self.status_var.set(f"Method for {selected_filter}: Standard clipping (clip) of values outside the range [0, 255].")
 
     def save_image(self):
         if not hasattr(self, 'results_dict') or not self.results_dict:
