@@ -97,7 +97,8 @@ python gui.py
    - helping to prepare the `filters_config.py` file by gathering all necessary parameters in one place,
    - helping with adjusting the high-boost formula to ensure avoiding dark images,
    - helped with adjusting the LoG output to ensure proper visualization by shifting the values by +128 to bring negative values into the visible range,
-   - some basic debugging of erros caused by e.g. overlooked type changes needed to be applied in a few places. 
+   - some basic debugging of erros caused by e.g. overlooked type changes needed to be applied in a few places,
+   - README.md generation (except the `Notes` section).
 
    ### DoG vs LoG
    - Both methods are based on Gaussian smoothing followed by a second-order response, so they often highlight similar edges and blob-like structures when the parameters are chosen appropriately.
@@ -105,7 +106,7 @@ python gui.py
    - When `sigma1` and `sigma2` in DoG are close together, the DoG response approximates the LoG response around a certain scale. This is why both techniques tend to give similar edge localization and feature detection results for comparable scales.
 
    ### High-Boost relation to Unsharp Mask
-   the high-boost filter is defined as
+   The high-boost filter is defined as
   `H = A · I − Gσ`, where `A ≥ 1`.
   Since `I − Gσ` is the high-frequency mask, we can rewrite it as
   `H = I + (A − 1) · (I − Gσ)`.
