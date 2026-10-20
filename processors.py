@@ -157,6 +157,9 @@ def run_log(image: Image.Image, sigma: float = 1.0, laplacian_size: int = 3, opt
     laplacian_image = run_laplacian(gaussian_blurred, laplacian_size=laplacian_size, optimized=optimized)
     
     log_array = np.array(laplacian_image)
+
+    # GenAI: Gemini helped with adjusting the LoG output to ensure proper visualization
+    # by shifting the values by +128 to bring negative values into the visible range
     log_array = np.clip(log_array + 128, 0, 255).astype(np.uint8)
     
     return {
