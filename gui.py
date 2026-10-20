@@ -11,7 +11,7 @@ class ImageFilterApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Custom Image Filter App")
-        self.root.geometry("900x600")
+        self.root.geometry("1200x850")
 
         self.image_path = None
         self.original_image = None
@@ -83,6 +83,9 @@ class ImageFilterApp:
         self.rebuild_ui_for_current_filter()
         self.reset_filter_output()
 
+    def on_param_changed(self, *args):
+        self.reset_filter_output(clear_original=False)
+
     def rebuild_ui_for_current_filter(self):
         # Clear existing parameter controls
         for widget in self.dynamic_params_frame.winfo_children():
@@ -109,7 +112,7 @@ class ImageFilterApp:
                     resolution=meta["step"],
                     orient=tk.HORIZONTAL,
                     variable=var,
-                    command=self.reset_filter_output,
+                    command=self.on_param_changed,
                     length=120
                 )
                 slider.pack(side=tk.LEFT)
@@ -119,7 +122,7 @@ class ImageFilterApp:
                 var = tk.StringVar(value=str(meta["default"]))
                 combo = ttk.Combobox(p_frame, textvariable=var, values=meta["options"], width=6, state="readonly")
                 combo.pack(side=tk.LEFT)
-                combo.bind("<<ComboboxSelected>>", self.reset_filter_output)
+                combo.bind("<<ComboboxSelected>>", self.on_param_changed)
                 self.param_vars[param_name] = var
 
         # Clear and rebuild the preview grid based on 'previews' from the config
@@ -128,19 +131,35 @@ class ImageFilterApp:
         self.preview_canvases = {}
 
         previews_list = filter_config.get("previews", ["Original", "Filtered"])
-        for title in previews_list:
+        self.preview_container.grid_columnconfigure(0, weight=1)
+        self.preview_container.grid_columnconfigure(1, weight=1)
+
+        for idx, title in enumerate(previews_list):
+            row = idx // 2
+            col = idx % 2
+
             frame = tk.LabelFrame(self.preview_container, text=title)
-            frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
-            
+            frame.grid(row=row, column=col, sticky="nsew", padx=5, pady=5)
+            self.preview_container.grid_rowconfigure(row, weight=1)
+
             canvas = tk.Label(frame)
             canvas.pack(fill=tk.BOTH, expand=True)
             self.preview_canvases[title] = canvas
 
-    def reset_filter_output(self, *args):
-        self.results_dict = {}
-        for canvas in self.preview_canvases.values():
-            canvas.config(image="")
-            canvas.image = None
+    def reset_filter_output(self, clear_original=True):
+        first_key = list(self.preview_canvases.keys())[0] if self.preview_canvases else None
+
+        for title, canvas in self.preview_canvases.items():
+            if clear_original or title != first_key:
+                canvas.config(image="")
+                canvas.image = None
+
+        if clear_original:
+            self.original_image = None
+            self.results_dict = {}
+        else:
+            if first_key and self.original_image:
+                self.results_dict = {first_key: self.original_image}
 
     def upload_image(self):
         file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.jpg *.jpeg *.png *.bmp")])
@@ -150,6 +169,7 @@ class ImageFilterApp:
             self.original_image = Image.open(file_path).convert("RGB")
             first_key = list(self.preview_canvases.keys())[0]
             self.display_image(self.original_image, self.preview_canvases[first_key])
+            self.results_dict = {first_key: self.original_image}
 
     def process_image(self):
         if self.original_image is None:
@@ -198,7 +218,7 @@ class ImageFilterApp:
     def display_image(self, img, canvas):
         # Resize for display fit while maintaining aspect ratio
         img_copy = img.copy()
-        img_copy.thumbnail((300, 300))
+        img_copy.thumbnail((500, 500))
         img_tk = ImageTk.PhotoImage(img_copy)
         
         canvas.config(image=img_tk)
